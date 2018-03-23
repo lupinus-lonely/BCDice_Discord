@@ -53,6 +53,7 @@ client.on('message', message => {
       diceset = diceset.replace(/ソード・ワールド2.0/g, "SwordWorld2.0");
       diceset = diceset.replace(/クトゥルフ/g, "Cthulhu");
       diceset = diceset.replace(/フィルトウィズ/g, "FilledWith");
+      diceset = diceset.replace(/ダブルクロス/g, "DoubleCross");
       //保存したIDの次にダイスボットの種類が入っているはずなのでそこに入れる。
       system[system.indexOf(message.guild.id) + 1] = diceset;
       message.reply("ダイスボットを" + diceset + "に変更しました。");
