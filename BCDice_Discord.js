@@ -14,8 +14,8 @@ const async = require('async');
 var URL = 'ここにURL';
 var regExp;
 
-//初期システム。とふのダイスボット名を入れれば動く。
-var system = 'Cthulhu';
+//ダイスボット保存用のやつ
+var system = [];
 
 //トークン
 const token = 'ここにトークン';
@@ -29,6 +29,11 @@ client.on('ready', () => {
 client.on('message', message => {
   // /rであるか？
   if (message.content.match("^\/r")) {
+    //初期ダイスの確認。なきゃクトゥルフにする。
+    if (system.indexOf(message.guild.id) == -1) {
+      system.push(message.guild.id);
+      system.push("Cthulhu");
+    }
     //ここにパターンとかいれていく。
     //バージョン確認
     if(message.content.match("^\/r version")) {
@@ -48,7 +53,8 @@ client.on('message', message => {
       diceset = diceset.replace(/ソード・ワールド2.0/g, "SwordWorld2.0");
       diceset = diceset.replace(/クトゥルフ/g, "Cthulhu");
       diceset = diceset.replace(/フィルトウィズ/g, "FilledWith");
-      system = diceset;
+      //保存したIDの次にダイスボットの種類が入っているはずなのでそこに入れる。
+      system[system.indexOf(message.guild.id) + 1] = diceset;
       message.reply("ダイスボットを" + diceset + "に変更しました。");
     } else if (message.content.match("^/r [0-9]+ .*")) {
       //クソみたいなゴリ押しやります。
@@ -69,7 +75,7 @@ client.on('message', message => {
         uri: URL + "v1/diceroll",
         headers: {'Content-type': 'application/json'},
         qs: {
-         'system': system,
+         'system': system[system.indexOf(message.guild.id) + 1],
          'command': post_text
         },
         json: true
@@ -81,25 +87,25 @@ client.on('message', message => {
       });
       //そもそも16回以上のループは拒否。
       if (loop_count >= 16) {
-      	message.reply("回数が多すぎます！　15回以下にしてください");
-      	return;
+        message.reply("回数が多すぎます！　15回以下にしてください");
+        return;
       }
       //ループだけどapiたたきまくってる上に遅い。
       async.mapSeries(each_count, function(loop_count_server, callback){
-      	//0.3msで連続は遅いなあ。
+        //0.3msで連続は遅いなあ。
         setTimeout(function(){
           //console.log(loop_count_server);
           request.get({
             uri: URL + "v1/diceroll",
             headers: {'Content-type': 'application/json'},
             qs: {
-              'system': system,
+              'system': system[system.indexOf(message.guild.id) + 1],
               'command': post_text
             },
             json: true
           }, function(err, req, data){
              reply_text = reply_text + data.result + "#" + String(loop_count_server + 1) + "\n";
-             //console.log(data.result + "#" + (loop_count_server + 1));
+             console.log(data.result + "#" + (loop_count_server + 1));
           });
           //全部完了したなら1を送る。
           if (loop_count < loop_count_server) {
@@ -109,9 +115,9 @@ client.on('message', message => {
           }
         }, 300);
       }, function(err){
-      	if (err == 1) {
+        if (err == 1) {
           message.reply(reply_text);
-      	}
+        }
       });
     //普通のダイス
     } else if (message.content.match("^/r .*")) {
@@ -123,7 +129,7 @@ client.on('message', message => {
         uri: URL + "v1/diceroll",
         headers: {'Content-type': 'application/json'},
         qs: {
-          'system': system,
+          'system': system[system.indexOf(message.guild.id) + 1],
           'command': dice
         },
         json: true
@@ -133,6 +139,7 @@ client.on('message', message => {
         } else {
           message.reply(data.result);
           //console.log(dice);
+          //console.log(message.guild.id);
         }
       });
     }
