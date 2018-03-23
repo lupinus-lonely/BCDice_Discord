@@ -30,9 +30,27 @@ client.on('message', message => {
   // /rであるか？
   if (message.content.match("^\/r")) {
     //初期ダイスの確認。なきゃクトゥルフにする。
-    if (system.indexOf(message.guild.id) == -1) {
-      system.push(message.guild.id);
-      system.push("Cthulhu");
+    //GroupDMは未対応。
+    if (message.channel.type == "group"){
+      message.reply("Error：グループチャットには対応していません！");
+      return;
+    }
+    //DMとそれ以外で変える。
+    if (message.channel.type == "dm"){
+      if (system.indexOf(message.channel.id) == -1){
+        system.push(message.channel.id);
+        system.push("Cthulhu");
+      } else {
+        system_index = system.indexOf(message.channel.id) + 1;
+      }
+    //DM以外
+    } else {
+      if (system.indexOf(message.guild.id) == -1) {
+        system.push(message.guild.id);
+        system.push("Cthulhu");
+      } else {
+        system_index = system.indexOf(message.guild.id) + 1;
+      }
     }
     //ここにパターンとかいれていく。
     //バージョン確認
@@ -53,9 +71,8 @@ client.on('message', message => {
       diceset = diceset.replace(/ソード・ワールド2.0/g, "SwordWorld2.0");
       diceset = diceset.replace(/クトゥルフ/g, "Cthulhu");
       diceset = diceset.replace(/フィルトウィズ/g, "FilledWith");
-      diceset = diceset.replace(/ダブルクロス/g, "DoubleCross");
       //保存したIDの次にダイスボットの種類が入っているはずなのでそこに入れる。
-      system[system.indexOf(message.guild.id) + 1] = diceset;
+      system[system_index] = diceset;
       message.reply("ダイスボットを" + diceset + "に変更しました。");
     } else if (message.content.match("^/r [0-9]+ .*")) {
       //クソみたいなゴリ押しやります。
@@ -74,7 +91,7 @@ client.on('message', message => {
         uri: URL + "v1/diceroll",
         headers: {'Content-type': 'application/json'},
         qs: {
-         'system': system[system.indexOf(message.guild.id) + 1],
+         'system': system[system_index],
          'command': post_text
         },
         json: true
@@ -98,7 +115,7 @@ client.on('message', message => {
             uri: URL + "v1/diceroll",
             headers: {'Content-type': 'application/json'},
             qs: {
-              'system': system[system.indexOf(message.guild.id) + 1],
+              'system': system[system_index],
               'command': post_text
             },
             json: true
@@ -128,7 +145,7 @@ client.on('message', message => {
         uri: URL + "v1/diceroll",
         headers: {'Content-type': 'application/json'},
         qs: {
-          'system': system[system.indexOf(message.guild.id) + 1],
+          'system': system[system_index],
           'command': dice
         },
         json: true
